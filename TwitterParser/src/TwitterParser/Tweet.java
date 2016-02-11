@@ -3,7 +3,12 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//Class to define a Tweet as an object with components: message(stored as String message) and specials @, #, emails, URLs(stored in hashmap of key string for category , and value arraylist of strings for contents)
+/**
+ * This class defines a simple Tweet object 
+ * @author Shan-e-Ali
+ * @version 1.0
+ * 
+ */
 public class Tweet 
 {
 	//stores tweet status (reply or not), mentioned users, hashtags, linked website urls and e-mails, and the tweet message itself
@@ -11,27 +16,45 @@ public class Tweet
 	//stores full, unedited tweet message
 	private String message;
 	
-	//default constructor
+	//Default constructor
 	public Tweet()
 	{
 		message = "";
 	}
 	
-	//parameterized constructor. Takes in string for full message, then calls Tweet class tweetChecker method to parse matches for specials and organize them into specials hashmap 
+	/**
+	 * This constructs a Tweet object with specified String message
+	 * calls TweetChecker method thrice to populate class Hashmap specials.
+	 * First with regex for mentions (@), then with regex for hashtags(#),
+	 * then with regex for URLs 
+	 * @param message the string representing the entire 140 char tweet
+	 */
 	public Tweet(String message)
 	{
-		this.message = message;
-		//Check @ special char			
-		tweetChecker("(\\S)?([^A-Za-z0-9])?(@[A-Za-z0-9&&[^\\.]]{1,15})\\s");
+		if(message.length()> 140)
+		{
+			System.out.println("Tweet object not created, message length greater than 140 characters");
+		}
+		else
+		{
+			this.message = message;
+			//Check @ special char			
+			tweetChecker("(\\S)?([^A-Za-z0-9])?(@[A-Za-z0-9&&[^\\.]]{1,15})\\s");
 		
-		//Check # special char
-		tweetChecker("#[A-Za-z0-9]{1,139}");
+			//Check # special char
+			tweetChecker("#[A-Za-z0-9]{1,139}");
 		
-		//Check URL special char
-		tweetChecker("([A-Za-z&&[^@]]{4,7}://)?(www.)?([A-Za-z0-9]+)?(@?[A-Za-z0-9_.]{1,138})\\.([A-Za-z]{2,3})");
+			//Check URL special char
+			tweetChecker("([A-Za-z&&[^@]]{4,7}://)?(www.)?([A-Za-z0-9]+)?(@?[A-Za-z0-9_.]{1,138})\\.([A-Za-z]{2,3})");
+		}
 	}
 	
-	//For use with default constructor. Takes in string containing entire unedited tweet message. If message is empty from default construction, sets message to passed String value 
+	/**
+	 * This is for use with the Tweet default constructor.
+	 * Takes in string containing entire unedited tweet message. If this.message
+	 * is empty from default construction, sets this.message to passed String value
+	 * @param message the string representing the entire 140 char tweet 
+	 */
 	public void setMessage(String message)
 	{
 		if(message != null && !message.isEmpty()&& this.message == "")
@@ -44,7 +67,13 @@ public class Tweet
 		}
 	}
 
-	//Takes in string for username without "@"symbol and a string for username's status as a mention or reply. Adds users to hashmap of tweet's specials, keeping replies separate from mentions. Still need to add Retweets to this, forgot about them
+	/**
+	 * This takes in string for username without "@"symbol and a string for username's status
+	 * as a mention or reply. Adds users to hashmap of tweet's specials, keeping replies separate
+	 * from mentions. 
+	 * @param user the username following a "@" mention.
+	 * @param replyOrMention the status of the mention as either a reply indicator or normal mention indicator
+	 */
 	public void addAtSign(String user, String replyOrMention)
 	{
 		if(user != null && !user.isEmpty() && replyOrMention != null && !replyOrMention.isEmpty())
@@ -82,10 +111,19 @@ public class Tweet
 		}
 	}
 	
-	//Takes in a string containing the hashtag topic, without "#" symbol. Adds topics hashtagged in tweet to the tweet's specials hashmap under a hashtags category
+	
+	/**
+	 * This takes in a string containing the hashtag topic, without "#" symbol. Adds topics hashtagged in tweet
+	 * to the tweet's specials hashmap under a hashtags category
+	 * @param hashtag the topic following a "#" symbol
+	 */
 	public void addHashTags(String hashtag)
 	{
-		if(hashtag != null && !hashtag.isEmpty())
+		if(hashtag.isEmpty())
+		{
+			System.out.println("Error: could not add hashtag to list of hashtags in tweet");
+		}
+		else
 		{
 			if(!specials.containsKey("#")) //checks if the tweet's specials hashmap contains a hashtag category already, and adds topic to it, if category doesn't exist, creates one and adds topic to it. 
 			{
@@ -97,141 +135,134 @@ public class Tweet
 				specials.get("#").add(hashtag);
 			}
 		}
-		else
-		{
-			System.out.println("Error: could not add hashtag to list of hashtags in tweet");
-		}
 	}
 	
-	//Takes in a string for the link and a string for link's status as an email address or website URL. Adds URLs and emails as separate categories to tweet's specials hashmap
+	/**
+	 * This takes in a string for the link and a string for link's status as an email address or website URL.
+	 *  Adds URLs and emails as separate categories to tweet's specials hashmap
+	 *  @param link the entire string representing a link matched by parser
+	 *  @param emailOrUrl the status of the matched link as either an e-mail address or URL
+	 */
 	public void addLink(String link, String emailOrUrl)
 	{
-		if(link != null && !link.isEmpty())
+		if(emailOrUrl == "URL") //if the passed link is to a website then continue
 		{
-			if(emailOrUrl == "URL") //if the passed link is to a website then continue
+			if(!specials.containsKey("URLs"))//checks if tweet's specials hashmap contains a URL category already and adds passed link to it, if it doesn't have URL category, creates URL category and adds link to it
 			{
-				if(!specials.containsKey("URLs"))//checks if tweet's specials hashmap contains a URL category already and adds passed link to it, if it doesn't have URL category, creates URL category and adds link to it
-				{
-					specials.put("URLs", new ArrayList<String>());
-					specials.get("URLs").add(link);
-				}
-				else
-				{
-					specials.get("URLs").add(link);
-				}
+				specials.put("URLs", new ArrayList<String>());
+				specials.get("URLs").add(link);
 			}
-			else//if passed link isn't a URL, must be email so checks if tweet's specials hashmap contains email category already and adds passed link to it, if category doesn't exist, creates it and adds link to it
+			else
 			{
-				if(!specials.containsKey("emails"))
-				{
-					specials.put("emails", new ArrayList<String>());
-					specials.get("emails").add(link);
-				}
-				else
-				{
-					specials.get("emails").add(link);
-				}
+				specials.get("URLs").add(link);
 			}
 		}
-		else
+		else//if passed link isn't a URL, must be email so checks if tweet's specials hashmap contains email category already and adds passed link to it, if category doesn't exist, creates it and adds link to it
 		{
-			System.out.println("Error: links could not be added to tweet");
+			if(!specials.containsKey("emails"))
+			{
+				
+				specials.put("emails", new ArrayList<String>());
+				specials.get("emails").add(link);
+			}
+			else
+			{
+				specials.get("emails").add(link);
+			}
 		}
 	}
+
 	
-	//accesses tweet's specials hashmap to find all topics stored in value string arraylist at key "#" and returns them as a String.
-	public String getHashtags()
+	/**
+	 * This accesses Tweet object's specials hashmap to find all topics stored in value string
+	 * arraylist at key "#" and returns them as a String.
+	 */
+	public List<String> getHashtags()
 	{
-		String tagList = "";
+		List<String> tagList = new ArrayList<String>();
 		if(specials.containsKey("#"))
 		{
 			for(String tag : specials.get("#"))
 			{
-				tagList += (tag + " ");
+				tagList.add(tag);
 			}
-			return tagList.substring(0, tagList.length()-1);
 		}
-		else
-		{
-			return "There are no hashtags included in this tweet.";
-		}
+		return tagList;
 	}
 	
-	//accesses tweet's specials hashmap to find value usernames under mention key, concatenates them to a string, then returns that string 
-	public String getMentions()
+	/**
+	 * This accesses tweet's specials hashmap to find value usernames under mention key,
+	 * concatenates them to a string, then returns that string 
+	 */
+	public List<String> getMentions()
 	{
-		String mentionList = "";
+		List<String> mentionList = new ArrayList<String>();
 		
 		if(specials.containsKey("mentions")) //Checks if there are any mentions in this tweet in the first place by checking tweet's specials hashmap for mention key
 		{
 			for(String mention : specials.get("mentions"))  //iterates over list of values under mention key and concatenates them to string to be returned
 			{
-				mentionList += (mention + " ");
+				mentionList.add(mention);
 			}
 			
-			return mentionList.substring(0, mentionList.length()-1);
+		}
+		return mentionList;
+	}
+	
+	/**
+	 * This accesses tweet's specials hashmap to see if there are any value users under 
+	 * mentions key, and counts them to return how many mentions in the tweet
+	 */
+	public int getMentionCount()
+	{
+		if(specials.containsKey("mentions"))
+		{
+			return specials.get("mentions").size();
 		}
 		else
 		{
-			return "There are no users mentioned in this tweet";
+			return 0;
 		}
 	}
 	
-	//accesses tweet's specials hashmap to see if there are any value users under mentions key, and counts them to return how many mentions in the tweet
-	public int getMentionCount()
+	/**
+	 * This access tweet's specials hashmap to find all value URLs under key URLs and concatenates them to a string to return
+	 */
+	public List<String> getURLs()
 	{
-		int mentions = 0;
-		
-		if(specials.containsKey("mentions"))
-		{
-			for(String s: specials.get("mentions"))
-			{
-				mentions++;
-			}
-		}
-		
-		return mentions;
-	}
-	
-	//access tweet's specials hashmap to find all value URLs under key URLs and concatenates them to a string to return
-	public String getURLs()
-	{
-		String urlList = "";
+		List<String> urlList = new ArrayList<String>();
 		
 		if(specials.containsKey("URLs"))
 		{
 			for(String url : specials.get("URLs"))
 			{
-				urlList += (url + " ");
+				urlList.add(url);
 			}
-			return urlList.substring(0, urlList.length()-1);
 		}
-		else
-		{
-			return "There are no URLs included in this tweet.";
-		}
+		return urlList;
 	}
 	
-	//accesses tweet's specials hashmap to find all value emails under key email and concatenates them to a string to return
-	public String getEmails()
+	/**
+	 * This accesses tweet's specials hashmap to find all value emails under key email and concatenates them to a string to return
+	 */
+	public List<String> getEmails()
 	{
-		String emailList = "";
+		List<String> emailList = new ArrayList<String>();
 		
 		if(specials.containsKey("emails"))
 		{
 			for(String email : specials.get("emails"))
 			{
-				emailList += (email + " ");
+				emailList.add(email);
 			}
-			return emailList.substring(0, emailList.length()-1);
 		}
-		else
-		{
-			return "There are no emails included in this tweet.";
-		}
+		return emailList;
 	}
 	
-	//check if this particular tweet is a reply or not through Tweet class isReply() method. If it's a reply, grabs value user from key reply in tweet's specials hashmap and returns string about tweet's status
+	/**
+	 * This checks if this particular Tweet is a reply or not through Tweet class isReply() method. If it's a reply,
+	 * grabs value user from key reply in Tweet's specials hashmap and returns string about tweet's status
+	 */
 	public String getReply()
 	{
 		if(isReply())
@@ -244,26 +275,28 @@ public class Tweet
 		}
 	}
 	
-	//accesses tweet's specials hashmap to see if a reply key exist, if it does, marks true that this tweet is a reply, if key reply doesn't exist, marks false that this tweet is not a reply
+	/**
+	 * This accesses tweet's specials hashmap to see if a reply key exist, if it does, marks true that this tweet
+	 * is a reply, if key reply doesn't exist, marks false that this tweet is not a reply
+	 */
 	public Boolean isReply()
 	{
-		if(specials.containsKey("reply"))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return specials.containsKey("reply");
 	}
 	
-	//accesses tweet's message and returns it as a string
+	/**
+	 * This accesses tweet's message and returns it as a string
+	 */
 	public String getMessage()
 	{
 		return this.message;
 	}
 	
-	//parses the lines of the message and uses regex patterns to match to separate out tweet components (users, reply, mentions, hashtag, emails, URLs) and organize them into tweet's specials hashmap. 
+	/**
+	 * This parses the lines of the message and uses regex patterns to match to separate out tweet components 
+	 * (users, reply, mentions, hashtag, emails, URLs) and organize them into tweet's specials hashmap.
+	 * @param toFind the particular regex being used to pattern match through the tweet 
+	 */
 	public void tweetChecker(String toFind)
 	{
 		
@@ -273,7 +306,11 @@ public class Tweet
 		while(findMatch.find())
 		{
 		
-			if(findMatch.group().length() !=0)
+			if(findMatch.group().length()==0)
+			{
+				return;
+			}
+			else
 			{
 				if(findMatch.group().startsWith("#"))//Checks for hashtags to separate out and add to tweet's specials hashmap as value under key "#"
 				{
